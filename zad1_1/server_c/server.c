@@ -9,7 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define BUF_SIZE 50000
+#define BUF_SIZE 7000000
 
 #define bailout(s) { perror( s ); exit(1);  }
 #define Usage() { errx( 0, "Usage: %s address-or-ip [port]\n", argv[0]); }
@@ -45,11 +45,15 @@ int main(int argc, char *argv[]) {
         peer_addrlen = sizeof(peer_addr);
         nread = recvfrom(sfd, buf, BUF_SIZE, 0,
                          (struct sockaddr *) &peer_addr, &peer_addrlen);
-        printf("recvfrom ok\n");
+        printf("recvfrom ok, packets: %zd\n", nread);
             if (nread <0 ) {
             fprintf(stderr, "failed recvfrom\n");
                 continue;               /* Ignore failed request */
-        }
+            }
+            else if (nread == 0) {
+                printf("End of file on socket\n");
+                break;
+            }
 
         sendto(sfd, (const char *)response, strlen(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen);
         printf("sendto ok\n");
