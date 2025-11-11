@@ -1,0 +1,14 @@
+version: "1.0"
+services:
+  server_c:
+    container_name: udp_server2
+    build: ./server_c
+    tty: true
+    cap_add:
+    - NET_ADMIN
+  client_py:
+    container_name: udp_client2
+    build: ./client_py
+    tty: true
+    cap_add:
+    - NET_ADMIN
