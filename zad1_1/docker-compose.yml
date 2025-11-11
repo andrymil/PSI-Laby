@@ -1,14 +1,29 @@
-version: "1.0"
+version: "3.8"
+
 services:
   server_c:
-    container_name: udp_server2
+    image: z34_server_image
     build: ./server_c
+    container_name: z34_udp_server
+    networks:
+      - lab_network
     tty: true
     cap_add:
-    - NET_ADMIN
+      - NET_ADMIN
+
   client_py:
-    container_name: udp_client2
+    image: z34_client_image
     build: ./client_py
+    container_name: z34_udp_client
+    networks:
+      - lab_network
     tty: true
     cap_add:
-    - NET_ADMIN
+      - NET_ADMIN
+    depends_on:
+      - server_c
+
+networks:
+  lab_network:
+    external: true
+    name: z34_network
