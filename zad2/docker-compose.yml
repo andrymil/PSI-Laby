@@ -3,7 +3,7 @@ version: "3.8"
 services:
   server_c:
     image: z34_server_image
-    build: ./server_c
+    build: ./server
     container_name: z34_udp_server
     networks:
       - lab_network
@@ -13,7 +13,7 @@ services:
 
   client_py:
     image: z34_client_image
-    build: ./client_py
+    build: ./client
     container_name: z34_udp_client
     networks:
       - lab_network
@@ -21,7 +21,7 @@ services:
     cap_add:
       - NET_ADMIN
     depends_on:
-      - server_c
+      - server
 
 networks:
   lab_network:
