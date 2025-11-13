@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  server_c:
+  server:
     image: z34_server_image
     build: ./server
     container_name: z34_udp_server
@@ -11,7 +11,7 @@ services:
     cap_add:
       - NET_ADMIN
 
-  client_py:
+  client:
     image: z34_client_image
     build: ./client
     container_name: z34_udp_client
