@@ -5,7 +5,7 @@
 #include <arpa/inet.h>  // htonl(), inet_pton()
 #include <sys/socket.h> // socket(), connect()
 
-#define HOST "server"
+#define HOST "z34_tcp_server"
 #define PORT 8888
 #define NUM_NODES 15
 
