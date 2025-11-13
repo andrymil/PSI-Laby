@@ -86,7 +86,8 @@ int main() {
             printf("FIN (-1) received. Checking status...\n");
 
             int missing_count = 0;
-            for (int i = 0; i < NUM_CHUNKS; i++) {
+            int i;
+            for (i = 0; i < NUM_CHUNKS; i++) {
                 if (received_chunks[i] == 0) {
                     missing_count++;
                 }
@@ -109,7 +110,7 @@ int main() {
                 *(int32_t*)nak_pkt = htonl(missing_count); // Pierwsze 4b = ilość
 
                 int j = 1;
-                for (int i = 0; i < NUM_CHUNKS; i++) {
+                for (i = 0; i < NUM_CHUNKS; i++) {
                     if (received_chunks[i] == 0) {
                         *(int32_t*)(nak_pkt + (j * 4)) = htonl(i);
                         j++;
