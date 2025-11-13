@@ -7,6 +7,7 @@ PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
 HOST = "0.0.0.0"
 PORT = 8888
 
+
 class Node:
     """Simple class to represent a tree node."""
     def __init__(self, value, index):
@@ -18,6 +19,7 @@ class Node:
     def __repr__(self):
         return f"Node(index={self.index}, value={self.value})"
 
+
 def print_tree_preorder(node, indent=""):
     """Helper function to visualize the reconstructed tree."""
     if node is None:
@@ -25,6 +27,7 @@ def print_tree_preorder(node, indent=""):
     print(f"{indent}{node}")
     print_tree_preorder(node.left, indent + "  L: ")
     print_tree_preorder(node.right, indent + "  R: ")
+
 
 def main():
     nodes = {}
@@ -75,6 +78,7 @@ def main():
         print_tree_preorder(root)
     else:
         print("ERROR: Root node (index 0) not found!")
+
 
 if __name__ == "__main__":
     main()
