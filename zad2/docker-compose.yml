@@ -4,7 +4,7 @@ services:
   server:
     image: z34_server_image
     build: ./server
-    container_name: z34_udp_server
+    container_name: z34_tcp_server
     networks:
       - lab_network
     tty: true
@@ -14,7 +14,7 @@ services:
   client:
     image: z34_client_image
     build: ./client
-    container_name: z34_udp_client
+    container_name: z34_tcp_client
     networks:
       - lab_network
     tty: true
