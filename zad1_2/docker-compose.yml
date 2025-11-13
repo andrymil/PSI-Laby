@@ -3,9 +3,9 @@ version: "3.8"
 services:
   server:
     # Serwer jest teraz w C
-    image: z34_server_image_udp
+    image: z34_server_image_udp2
     build: ./server
-    container_name: z34_udp_server # Zmieniona nazwa, aby odzwierciedlić UDP
+    container_name: z34_udp_server2 # Zmieniona nazwa, aby odzwierciedlić UDP
     networks:
       - lab_network
     tty: true
@@ -14,9 +14,9 @@ services:
 
   client:
     # Klient jest teraz w Pythonie
-    image: z34_client_image_udp
+    image: z34_client_image_udp2
     build: ./client
-    container_name: z34_udp_client # Zmieniona nazwa
+    container_name: z34_udp_client2 # Zmieniona nazwa
     networks:
       - lab_network
     tty: true
