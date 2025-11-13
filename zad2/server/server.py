@@ -4,14 +4,14 @@ import struct
 PACKET_FORMAT = '!ii'
 PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
 
-# --- POPRAWKA ---
-# Serwer w kontenerze Docker musi nasłuchiwać na '0.0.0.0',
-# aby akceptować połączenia z innych kontenerów (np. od klienta).
+# --- FIX ---
+# A server in a Docker container must listen on '0.0.0.0',
+# to accept connections from other containers (e.g., from the client).
 HOST = "0.0.0.0"
-PORT = 8888 # Port musi być zgodny z klientem i Dockerfile
+PORT = 8888 # Port must match the client and Dockerfile
 
 class Node:
-    """Prosta klasa do reprezentacji węzła drzewa."""
+    """Simple class to represent a tree node."""
     def __init__(self, value, index):
         self.value = value
         self.index = index
@@ -22,7 +22,7 @@ class Node:
         return f"Node(index={self.index}, value={self.value})"
 
 def print_tree_preorder(node, indent=""):
-    """Pomocnicza funkcja do wizualizacji zrekonstruowanego drzewa."""
+    """Helper function to visualize the reconstructed tree."""
     if node is None:
         return
     print(f"{indent}{node}")
@@ -37,33 +37,35 @@ def main():
         try:
             s.bind((HOST, PORT))
         except socket.error as e:
-            print(f"Błąd podczas bindowania: {e}")
+            print(f"Error during bind: {e}")
             return
 
         s.listen()
-        print(f"Serwer nasłuchuje na {HOST}:{PORT}...")
+        print(f"Server listening on {HOST}:{PORT}...")
 
         conn, addr = s.accept()
         with conn:
-            print(f"Połączono z {addr}")
+            print(f"Connected by {addr}")
             while True:
                 data = conn.recv(PACKET_SIZE)
                 if not data:
+                    # Client closed the connection
                     break
 
                 if len(data) == PACKET_SIZE:
                     index, value = struct.unpack(PACKET_FORMAT, data)
-                    print(f"Odebrano dane: index={index}, value={value}")
+                    print(f"Received data: index={index}, value={value}")
                     nodes[index] = Node(value, index)
                 else:
-                    print(f"Odebrano niekompletny pakiet! ({len(data)} bajtów)")
+                    print(f"Received incomplete packet! ({len(data)} bytes)")
 
-    print("\nKlient zakończył połączenie. Rozpoczynam rekonstrukcję drzewa...")
+    print("\nClient disconnected. Starting tree reconstruction...")
 
     if not nodes:
-        print("Nie odebrano żadnych węzłów.")
+        print("No nodes were received.")
         return
 
+    # Link nodes based on their indices
     for index, node in nodes.items():
         left_index = 2 * index + 1
         right_index = 2 * index + 2
@@ -72,12 +74,13 @@ def main():
         if right_index in nodes:
             node.right = nodes[right_index]
 
+    # Root is always at index 0
     root = nodes.get(0)
     if root:
-        print("\n--- Zrekonstruowane Drzewo (w kolejności Pre-order) ---")
+        print("\n--- Reconstructed Tree (Pre-order traversal) ---")
         print_tree_preorder(root)
     else:
-        print("BŁĄD: Nie znaleziono korzenia (indeks 0)!")
+        print("ERROR: Root node (index 0) not found!")
 
 if __name__ == "__main__":
     main()

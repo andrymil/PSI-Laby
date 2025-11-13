@@ -1,21 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>     // close()
-#include <arpa/inet.h>  // htonl()
-#include <sys/socket.h> // socket()
-#include <netdb.h>      // <-- POTRZEBNE DO ROZWIĄZYWANIA NAZW
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
-// --- POPRAWKA 1 ---
-// Używamy nazwy USŁUGI 'server' z pliku docker-compose.yml
-// Docker (w sieci z34_network) sam zamieni to na właściwy adres IP
 #define HOST "server"
 #define PORT 8888
-#define PORT_STR "8888" // Port jako string dla getaddrinfo
+#define PORT_STR "8888"
 #define NUM_NODES 15
-
-// (Struktury Node, Packet oraz funkcje createNode,
-// buildPerfectTree, freeTree, sendTree pozostają BEZ ZMIAN)
 
 typedef struct Node {
     int value;
@@ -71,30 +65,25 @@ void sendTree(Node* node, int index, int sock) {
         perror("send failed");
         return;
     }
-    printf("Wysłano węzeł: index=%d, value=%d\n", ntohl(pkt.index), ntohl(pkt.value));
+    printf("Sent node: index=%d, value=%d\n", ntohl(pkt.index), ntohl(pkt.value));
     sendTree(node->left, 2 * index + 1, sock);
     sendTree(node->right, 2 * index + 2, sock);
 }
 
-
-// --- POPRAWKA 2 ---
-// Funkcja pomocnicza do rozwiązywania nazwy hosta i łączenia
 int connectToServer() {
     int sock = -1;
     struct addrinfo hints, *servinfo, *p;
     int rv;
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET; // Wymuszamy IPv4 (zgodnie z instrukcją)
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    // Rozwiąż nazwę hosta (HOST) na adres IP
     if ((rv = getaddrinfo(HOST, PORT_STR, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(rv));
         return -1;
     }
 
-    // Przejdź przez wyniki i połącz się z pierwszym możliwym
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("client: socket");
@@ -106,18 +95,17 @@ int connectToServer() {
             perror("client: connect");
             continue;
         }
-        break; // Udało się połączyć
+        break;
     }
 
     if (p == NULL) {
-        fprintf(stderr, "Nie udało się połączyć z hostem %s\n", HOST);
+        fprintf(stderr, "Failed to connect to host %s\n", HOST);
         sock = -1;
     }
 
-    freeaddrinfo(servinfo); // Zwolnij pamięć
+    freeaddrinfo(servinfo);
     return sock;
 }
-// --------------------
 
 int main() {
     int sock = 0;
@@ -128,25 +116,22 @@ int main() {
     };
 
     Node* root = buildPerfectTree(values, 0, NUM_NODES);
-    printf("Utworzono drzewo binarne (15 węzłów).\n");
+    printf("Created binary tree (15 nodes).\n");
 
-    // --- POPRAWKA 3 ---
-    // Używamy nowej funkcji do łączenia
-    printf("Łączenie z serwerem %s:%d...\n", HOST, PORT);
+    printf("Connecting to server %s:%d...\n", HOST, PORT);
     sock = connectToServer();
 
     if (sock == -1) {
-        fprintf(stderr, "Błąd krytyczny podczas łączenia z serwerem.\n");
+        fprintf(stderr, "Critical error while connecting to server.\n");
         freeTree(root);
         return -1;
     }
-    // --------------------
 
-    printf("Połączono z serwerem %s:%d\n", HOST, PORT);
+    printf("Connected to server %s:%d\n", HOST, PORT);
 
     sendTree(root, 0, sock);
 
-    printf("Wysyłanie zakończone. Zamykanie połączenia.\n");
+    printf("Sending complete. Closing connection.\n");
     close(sock);
     freeTree(root);
 
