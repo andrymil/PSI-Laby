@@ -8,7 +8,7 @@ import struct
 PACKET_FORMAT = '!ii'
 PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
 
-HOST = "z34_udp_server"
+HOST = "0.0.0.0"
 PORT = 8888
 
 class Node:

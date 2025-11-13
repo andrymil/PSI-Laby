@@ -5,7 +5,7 @@
 #include <arpa/inet.h>  // htonl(), inet_pton()
 #include <sys/socket.h> // socket(), connect()
 
-#define HOST "z34_udp_server"
+#define HOST "server"
 #define PORT 8888
 #define NUM_NODES 15
 
