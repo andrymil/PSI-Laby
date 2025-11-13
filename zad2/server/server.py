@@ -4,11 +4,8 @@ import struct
 PACKET_FORMAT = '!ii'
 PACKET_SIZE = struct.calcsize(PACKET_FORMAT)
 
-# --- FIX ---
-# A server in a Docker container must listen on '0.0.0.0',
-# to accept connections from other containers (e.g., from the client).
 HOST = "0.0.0.0"
-PORT = 8888 # Port must match the client and Dockerfile
+PORT = 8888
 
 class Node:
     """Simple class to represent a tree node."""
@@ -49,7 +46,6 @@ def main():
             while True:
                 data = conn.recv(PACKET_SIZE)
                 if not data:
-                    # Client closed the connection
                     break
 
                 if len(data) == PACKET_SIZE:
@@ -65,7 +61,6 @@ def main():
         print("No nodes were received.")
         return
 
-    # Link nodes based on their indices
     for index, node in nodes.items():
         left_index = 2 * index + 1
         right_index = 2 * index + 2
@@ -74,7 +69,6 @@ def main():
         if right_index in nodes:
             node.right = nodes[right_index]
 
-    # Root is always at index 0
     root = nodes.get(0)
     if root:
         print("\n--- Reconstructed Tree (Pre-order traversal) ---")
