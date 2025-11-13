@@ -1,61 +1,55 @@
-#include <err.h>
-#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
-#define BUF_SIZE 7000000
+int main(int argc, char **argv) {
+  int port = (argc > 1) ? atoi(argv[1]) : 8888;
 
-#define bailout(s) { perror( s ); exit(1);  }
-#define Usage() { errx( 0, "Usage: %s address-or-ip [port]\n", argv[0]); }
+  int s = socket(AF_INET, SOCK_DGRAM, 0);
+  if (s < 0) {
+    perror("socket");
+    return 1;
+  }
 
-int main(int argc, char *argv[]) {
-    int                      sfd, s;
-    char                     buf[BUF_SIZE];
-    char *response = "ACK";
-    ssize_t                  nread;
-    socklen_t                peer_addrlen;
-    struct sockaddr_in       server, client;
-    struct sockaddr_storage  peer_addr;
+  struct sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr.sin_port = htons(port);
 
-    if (argc != 2)
-        Usage();
+  if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    perror("bind");
+    return 1;
+  }
 
-    if ( (sfd=socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-	    bailout("socker() ");
+  printf("UDP server listening on 0.0.0.0:%d\n", port);
+  fflush(stdout);
 
-   server.sin_family      = AF_INET;  /* Server is in Internet Domain */
-   server.sin_port        = htons(atoi(argv[1]));         /* Use any available port      */
-   server.sin_addr.s_addr = INADDR_ANY; /* Server's Internet Address   */
+  char buf[65536];
+  char ack = 'A';
+  struct sockaddr_in cli;
+  socklen_t clen = sizeof(cli);
 
-   if ( (s=bind(sfd, (struct sockaddr *)&server, sizeof(server))) < 0)
-      bailout("bind() ");
-   printf("bind() successful\n");
-
-
-    /* Read datagrams and echo them back to sender. */
-   printf("waiting for packets...\n");
-
-    for (;;) {
-        peer_addrlen = sizeof(peer_addr);
-        nread = recvfrom(sfd, buf, BUF_SIZE, 0,
-                         (struct sockaddr *) &peer_addr, &peer_addrlen);
-        printf("recvfrom ok, packets: %zd\n", nread);
-            if (nread <0 ) {
-            fprintf(stderr, "failed recvfrom\n");
-                continue;               /* Ignore failed request */
-            }
-            else if (nread == 0) {
-                printf("End of file on socket\n");
-                break;
-            }
-
-        sendto(sfd, (const char *)response, strlen(response), 0, (struct sockaddr *) &peer_addr, peer_addrlen);
-        printf("sendto ok\n");
+  for (;;) {
+    ssize_t n =
+        recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&cli, &clen);
+    if (n < 0) {
+      perror("recvfrom");
+      continue;
     }
+
+    printf("rx=%zd B from %s:%d -> ACK\n", n, inet_ntoa(cli.sin_addr),
+           ntohs(cli.sin_port));
+    fflush(stdout);
+
+    if (sendto(s, &ack, 1, 0, (struct sockaddr *)&cli, clen) < 0)
+      perror("sendto");
+  }
+  // never reached
+  // close(s);
+  // return 0;
 }
