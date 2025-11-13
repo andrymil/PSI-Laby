@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  server:
+    # Serwer jest teraz w C
+    image: z34_server_image_udp
+    build: ./server
+    container_name: z34_udp_server # Zmieniona nazwa, aby odzwierciedlić UDP
+    networks:
+      - lab_network
+    tty: true
+    cap_add:
+      - NET_ADMIN # Dobre na przyszłość, choć tu nieużywane
+
+  client:
+    # Klient jest teraz w Pythonie
+    image: z34_client_image_udp
+    build: ./client
+    container_name: z34_udp_client # Zmieniona nazwa
+    networks:
+      - lab_network
+    tty: true
+    cap_add:
+      - NET_ADMIN # KLUCZOWE: Wymagane do uruchomienia 'tc'
+    depends_on:
+      - server
+    # --- SYMULACJA BŁĘDÓW ---
+    # To polecenie uruchamia się ZAMIAST CMD z Dockerfile
+    # 1. Czeka 2s aż serwer wstanie
+    # 2. Używa 'tc', aby dodać 10% gubienia pakietów i 50ms opóźnienia
+    # 3. Uruchamia właściwego klienta w Pythonie
+    command: /bin/sh -c "sleep 2 && \
+      tc qdisc add dev eth0 root netem loss 10% delay 50ms && \
+      echo '--- SYMULACJA GUBIENIA PAKIETÓW AKTYWNA (10% loss, 50ms delay) ---' && \
+      python3 ./client.py"
+
+networks:
+  lab_network:
+    external: true
+    name: z34_network
