@@ -16,10 +16,7 @@ def attempt(size: int):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.settimeout(TIMEOUT_S)
 
-    try:
-        s.setsockopt(socket.IPPROTO_IP, 10, 2)
-    except OSError:
-        pass
+    s.setsockopt(socket.IPPROTO_IP, 10, 2)
 
     data = b"A" * size
     t0 = time.perf_counter()
