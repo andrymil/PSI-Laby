@@ -1,6 +1,9 @@
-FROM gcc:4.9
+# Używamy oficjalnego, lekkiego obrazu Python
+FROM python:3.9-slim
+
 COPY . /Server
 WORKDIR /Server/
-# Kompilujemy nowy program server.c
-RUN gcc -o server server.c
-CMD ["./server"]
+
+# Nie ma potrzeby niczego instalować ani kompilować
+# Uruchamiamy bezpośrednio skrypt serwera
+CMD ["python3", "./server.py"]

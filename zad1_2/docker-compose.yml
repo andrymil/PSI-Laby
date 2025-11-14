@@ -2,37 +2,35 @@ version: "3.8"
 
 services:
   server:
-    # Serwer jest teraz w C
-    image: z34_server_image_udp2
+    # Serwer jest teraz w Pythonie
+    image: z34_py_server_image # Nowa nazwa obrazu
     build: ./server
-    container_name: z34_udp_server2 # Zmieniona nazwa, aby odzwierciedlić UDP
+    container_name: z34_py_server # Nowa nazwa kontenera
     networks:
       - lab_network
     tty: true
-    cap_add:
-      - NET_ADMIN # Dobre na przyszłość, choć tu nieużywane
+    # cap_add: - NET_ADMIN # Serwer już nie potrzebuje 'tc'
 
   client:
-    # Klient jest teraz w Pythonie
-    image: z34_client_image_udp2
+    # Klient jest teraz w C
+    image: z34_c_client_image # Nowa nazwa obrazu
     build: ./client
-    container_name: z34_udp_client2 # Zmieniona nazwa
+    container_name: z34_c_client # Nowa nazwa kontenera
     networks:
       - lab_network
     tty: true
     cap_add:
-      - NET_ADMIN # KLUCZOWE: Wymagane do uruchomienia 'tc'
+      - NET_ADMIN # KLUCZOWE: Wciąż wymagane do uruchomienia 'tc'
     depends_on:
       - server
     # --- SYMULACJA BŁĘDÓW ---
-    # To polecenie uruchamia się ZAMIAST CMD z Dockerfile
-    # 1. Czeka 2s aż serwer wstanie
-    # 2. Używa 'tc', aby dodać 10% gubienia pakietów i 50ms opóźnienia
-    # 3. Uruchamia właściwego klienta w Pythonie
+    # Polecenie jest prawie identyczne, ale na końcu
+    # uruchamia skompilowany program C (./client)
+    # zamiast skryptu Pythona.
     command: /bin/sh -c "sleep 2 && \
       tc qdisc add dev eth0 root netem loss 10% delay 50ms && \
       echo '--- SYMULACJA GUBIENIA PAKIETÓW AKTYWNA (10% loss, 50ms delay) ---' && \
-      python3 ./client.py"
+      ./client"
 
 networks:
   lab_network:
