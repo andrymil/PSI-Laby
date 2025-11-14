@@ -1,5 +1,4 @@
-# Używamy oficjalnego, lekkiego obrazu Python
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 COPY . /Server
 WORKDIR /Server/
