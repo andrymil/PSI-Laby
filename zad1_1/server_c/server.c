@@ -49,7 +49,4 @@ int main(int argc, char **argv) {
     if (sendto(s, &ack, 1, 0, (struct sockaddr *)&cli, clen) < 0)
       perror("sendto");
   }
-  // never reached
-  // close(s);
-  // return 0;
 }
