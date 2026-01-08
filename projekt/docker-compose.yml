@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  server:
+    image: z34_server_image
+    build: .
+    container_name: z34_tcp_server
+    command: python3 server.py 9000
+    networks:
+      - lab_network
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "9000:9000"
+
+  client:
+    image: z34_client_image
+    build: .
+    container_name: z34_tcp_client
+    command: python3 client.py z34_tcp_server 9000
+    networks:
+      - lab_network
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      - server
+    stdin_open: true
+
+networks:
+  lab_network:
+    name: z34_network
+    driver: bridge
+    external: true
