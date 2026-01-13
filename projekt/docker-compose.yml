@@ -34,4 +34,4 @@ services:
 networks:
   lab_network:
     name: z34_network
-    driver: bridge
+    external: true
