@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  server:
+    build: .
+    container_name: z34_tcp_server
+    command: python -u server.py 9000
+    networks:
+      - lab_network
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "9000:9000"
+    stdin_open: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+
+  client:
+    build: .
+    container_name: z34_tcp_client
+    command: python -u client.py server 9000
+    networks:
+      - lab_network
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - server
+    stdin_open: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  lab_network:
+    name: z34_network
+    external: true
