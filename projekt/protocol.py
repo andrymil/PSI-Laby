@@ -8,7 +8,7 @@ from consts import *
 
 class ProtocolEngine:
     def __init__(self):
-        self.session_key = None  # 32 bytes
+        self.session_key = None
         self.p = None
         self.g = None
         self.private_key = None
@@ -16,7 +16,6 @@ class ProtocolEngine:
         self.peer_public_key = None
 
     def generate_dh_params(self):
-        """Dla klienta: Generuje p, g, klucz prywatny i publiczny."""
         self.p = DEFAULT_P
         self.g = DEFAULT_G
         self.private_key = secrets.randbelow(self.p - 1) + 1
@@ -24,7 +23,6 @@ class ProtocolEngine:
         return self.p, self.g, self.public_key
 
     def handle_peer_dh_params(self, p, g, peer_public_key):
-        """Dla serwera: Odbiera parametry od klienta."""
         self.p = p
         self.g = g
         self.peer_public_key = peer_public_key
@@ -35,23 +33,20 @@ class ProtocolEngine:
         return self.public_key
 
     def finalize_handshake(self, peer_public_key):
-        """Dla klienta: Odbiera B od serwera i finalizuje klucz."""
         self.peer_public_key = peer_public_key
         self._derive_session_key()
 
     def _derive_session_key(self):
-        """Oblicza wspólny sekret i hashuje go do 32B."""
         shared_secret = pow(self.peer_public_key, self.private_key, self.p)
         self.session_key = hashlib.sha256(str(shared_secret).encode()).digest()
 
         print("\n" + "=" * 50)
-        print(f"[RAPORT] Ustalony KLUCZ SESJI (Hex): {self.session_key.hex()}")
+        print(f"[REPORT] Established SESSION KEY (Hex): {self.session_key.hex()}")
         print("=" * 50 + "\n")
 
     def xor_encrypt_decrypt(self, data: bytes) -> bytes:
-        """Szyfr strumieniowy XOR."""
         if not self.session_key:
-            raise Exception("Brak klucza sesji!")
+            raise Exception("Session key missing!")
 
         output = bytearray()
         key_len = len(self.session_key)
@@ -68,40 +63,31 @@ class ProtocolEngine:
         return struct.unpack(HEADER_FORMAT, header_bytes)
 
     def create_secure_message(self, inner_flag, content: bytes) -> bytes:
-        """
-        Wariant W1: Encrypt-then-MAC.
-        """
-        # 1. Przygotuj plaintext (Flaga + Dane)
         plaintext = struct.pack("!B", inner_flag) + content
 
-        # 2. Zaszyfruj
         ciphertext = self.xor_encrypt_decrypt(plaintext)
 
-        print("[RAPORT] Wysylanie zaszyfrowanej wiadomosci:")
+        print("[REPORT] Sending encrypted message:")
         print(f"  Plaintext (Hex): {plaintext.hex()}")
         print(f"  Ciphertext (Hex): {ciphertext.hex()}")
 
-        # 3. Oblicz MAC
         tag = hmac.new(self.session_key, ciphertext, hashlib.sha256).digest()
 
-        # 4. Złóż payload
         payload = ciphertext + tag
 
         return self.create_packet(MSG_TYPE_SECURE_MESSAGE, payload)
 
     def decrypt_secure_message(self, payload: bytes):
         if len(payload) < MAC_SIZE:
-            raise ValueError("Payload zbyt krótki (brak MAC)")
+            raise ValueError("Payload too short (missing MAC)")
 
         ciphertext = payload[:-MAC_SIZE]
         received_tag = payload[-MAC_SIZE:]
 
-        # 1. Weryfikacja MAC
         calculated_tag = hmac.new(self.session_key, ciphertext, hashlib.sha256).digest()
         if not hmac.compare_digest(received_tag, calculated_tag):
-            raise ValueError("Błąd weryfikacji MAC! Wiadomość sfałszowana.")
+            raise ValueError("MAC verification failed! Message forged.")
 
-        # 2. Deszyfrowanie
         plaintext = self.xor_encrypt_decrypt(ciphertext)
 
         inner_flag = plaintext[0]

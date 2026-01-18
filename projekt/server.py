@@ -22,7 +22,6 @@ class Server:
         self.sock.bind((self.host, self.port))
         self.sock.listen(5)
 
-        # Mapa klientów: {addr_str: {'socket': sock, 'engine': ProtocolEngine, 'active': bool}}
         self.clients = {}
         self.lock = threading.Lock()
         self.running = True
@@ -30,7 +29,6 @@ class Server:
     def start(self):
         print(f"Server started on port {self.port}")
 
-        # Wątek akceptujący połączenia
         accept_thread = threading.Thread(target=self.accept_loop)
         accept_thread.daemon = True
         accept_thread.start()
@@ -54,7 +52,6 @@ class Server:
 
                 print(f"\n[+] New connection from {addr_str}")
 
-                # Wątek obsługi konkretnego klienta
                 client_thread = threading.Thread(
                     target=self.handle_client, args=(addr_str,)
                 )
@@ -71,14 +68,12 @@ class Server:
 
         try:
             while client_data["active"]:
-                # Odbierz nagłówek (5B)
                 header_bytes = sock.recv(HEADER_SIZE)
                 if not header_bytes:
                     break
 
                 msg_type, length = engine.parse_header(header_bytes)
 
-                # Odbierz payload
                 payload = b""
                 while len(payload) < length:
                     chunk = sock.recv(length - len(payload))
@@ -86,21 +81,15 @@ class Server:
                         raise ConnectionError("Incomplete payload")
                     payload += chunk
 
-                # --- Maszyna stanów protokołu ---
-
                 if msg_type == MSG_TYPE_CLIENT_HELLO:
-                    # Payload: p (4B) | g (4B) | A (4B)
                     p = struct.unpack("!I", payload[0:4])[0]
                     g = struct.unpack("!I", payload[4:8])[0]
                     A = struct.unpack("!I", payload[8:12])[0]
 
                     print(f"[{addr_str}] Received ClientHello (p={p}, g={g}, A={A})")
 
-                    # Oblicz B i klucz sesji
                     B = engine.handle_peer_dh_params(p, g, A)
 
-                    # Wyślij ServerHello
-                    # Payload: B (4B)
                     resp_payload = struct.pack("!I", B)
                     packet = engine.create_packet(MSG_TYPE_SERVER_HELLO, resp_payload)
                     sock.sendall(packet)
@@ -116,11 +105,11 @@ class Server:
 
                         elif inner_flag == INNER_FLAG_END_SESSION:
                             print(f"[{addr_str}] Received EndSession request.")
-                            break  # Wyjdź z pętli, zamknij połączenie
+                            break
 
                     except ValueError as e:
                         print(f"[{addr_str}] SECURITY ALERT: {e}")
-                        break  # Zerwanie połączenia przy błędzie bezpieczeństwa
+                        break
 
                 else:
                     print(f"[{addr_str}] Unknown message type: {msg_type}")
@@ -157,7 +146,6 @@ class Server:
         except Exception as e:
             print(f"Error sending EndSession: {e}")
 
-        # Usuń klienta po wysłaniu
         self.disconnect_client(addr_str)
 
     def command_loop(self):

@@ -1,14 +1,23 @@
 # Instrukcja Uruchomienia i Obsługi - Mini TLS
 
-Poniższa instrukcja opisuje krok po kroku proces uruchomienia środowiska, podłączenia się do konsoli serwera i klienta oraz przeprowadzania symulacji komunikacji.
+Poniższa instrukcja opisuje proces uruchomienia środowiska, podłączenia się do konsoli serwera i klienta oraz przeprowadzania symulacji komunikacji.
 
 ## 1. Uruchomienie Środowiska
 
-Otwórz terminal w folderze głównym projektu i wykonaj komendę, która zbuduje obrazy i uruchomi kontenery w tle:
+Otwórz terminal w folderze głównym projektu i wykonaj poniższe komendy.
+
+Zalecane jest wcześniejsze usunięcie istniejących kontenerów:
+
+```bash
+docker-compose down
+```
+
+Zbuduowanie obrazów i uruchomienie kontenerów w tle:
 
 ```bash
 docker-compose up -d --build
 ```
+
 
 ## 2. Obsługa Serwera (Terminal 1)
 
@@ -30,9 +39,9 @@ docker attach z34_tcp_server
 
 - `exit` – Wyłącza serwer.
 
-**Jak wyjść bez wyłączania serwera?** Aby odłączyć się od konsoli, ale zostawić serwer działający, naciśnij sekwencję klawiszy: Ctrl+P, a następnie Ctrl+Q.
+Aby odłączyć się od konsoli, ale zostawić serwer działający, naciśnij sekwencję klawiszy: Ctrl+P, a następnie Ctrl+Q.
 
-## 3. Obsługa Klienta (Terminal 2)
+## 3. Obsługa Pierwszego Klienta (Terminal 2)
 
 Otwórz nowe, osobne okno terminala (lub nową kartę) i wykonaj analogiczne kroki dla klienta.
 
@@ -50,35 +59,38 @@ docker attach z34_tcp_client
 
 - `send <wiadomość>` – Wysyła zaszyfrowany tekst (np. send Tajne haslo).
 
-- `quit` – Kończy połączenie i zamyka program klienta.
+- `exit` – Kończy połączenie i zamyka program klienta.
 
-## 4. Przykładowy Scenariusz (Krok po kroku)
+### 3a. Dodawanie Kolejnych Klientów
+1. Otwórz nowy terminal.
 
-Aby przetestować działanie protokołu, wykonaj poniższą sekwencję:
+2. Wpisz komendę:
+
+```bash
+docker-compose run --rm client
+```
+
+3. Nowy klient uruchomi się niezależnie.
+
+
+## 4. Przykładowy Scenariusz
 
 1. Terminal 2 (Klient): Wpisz `connect`.
 
-*Efekt*: Zobaczysz logi z wymiany kluczy (ClientHello / ServerHello).
+*Efekt*: Logi z wymiany kluczy (ClientHello / ServerHello).
 
-2. Terminal 2 (Klient): Wpisz `send Witaj Serwerze`.
+2. Terminal 2 (Klient): Wpisz `send Witaj`.
 
 *Efekt*: Klient zaszyfruje wiadomość i wyśle ją do serwera.
 
 3. Terminal 1 (Serwer): Spójrz na logi.
 
-*Efekt*: Serwer powinien odebrać wiadomość, zweryfikować HMAC, odszyfrować ją i wyświetlić: `[IP:Port] Secure Message: Witaj Serwerze`.
+*Efekt*: Serwer powinien odebrać wiadomość, zweryfikować HMAC, odszyfrować ją i wyświetlić: `[IP:Port] Secure Message: Witaj`.
 
 4. Terminal 1 (Serwer): Wpisz `list`.
 
 *Efekt*: Zobaczysz adres IP podłączonego klienta.
 
-5. Terminal 2 (Klient): Wpisz `quit`.
+5. Terminal 2 (Klient): Wpisz `exit`.
 
 *Efekt*: Klient wyśle żądanie EndSession i zakończy pracę.
-
-## 5. Zatrzymanie Projektu
-Po zakończeniu testów, aby wyłączyć i usunąć kontenery, wykonaj w dowolnym terminalu w folderze projektu:
-
-```bash
-docker-compose down
-```

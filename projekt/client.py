@@ -32,17 +32,14 @@ class Client:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.connect((self.host, self.port))
             self.connected = True
-            self.engine = ProtocolEngine()  # Reset engine
+            self.engine = ProtocolEngine()
 
-            # --- Handshake Start ---
-            # 1. Wysyłanie ClientHello
             p, g, A = self.engine.generate_dh_params()
             payload = struct.pack("!III", p, g, A)
             packet = self.engine.create_packet(MSG_TYPE_CLIENT_HELLO, payload)
             self.sock.sendall(packet)
             print(f"Sent ClientHello (p={p}, g={g}, A={A})")
 
-            # 2. Start wątku odbiorczego (oczekiwanie na ServerHello)
             self.receive_thread = threading.Thread(target=self.receive_loop)
             self.receive_thread.daemon = True
             self.receive_thread.start()
@@ -61,14 +58,12 @@ class Client:
         )
         try:
             self.sock.sendall(packet)
-            # print("Message sent.")
         except:
             print("Failed to send message.")
             self.disconnect()
 
     def disconnect(self):
         if self.connected:
-            # Próba wysłania EndSession
             if self.engine.session_key:
                 try:
                     packet = self.engine.create_secure_message(
@@ -88,7 +83,6 @@ class Client:
     def receive_loop(self):
         try:
             while self.connected:
-                # Odbierz nagłówek
                 header_bytes = self.sock.recv(HEADER_SIZE)
                 if not header_bytes:
                     break
@@ -103,7 +97,6 @@ class Client:
                     payload += chunk
 
                 if msg_type == MSG_TYPE_SERVER_HELLO:
-                    # Payload: B (4B)
                     B = struct.unpack("!I", payload)[0]
                     print(f"Received ServerHello (B={B})")
                     self.engine.finalize_handshake(B)
@@ -132,7 +125,7 @@ class Client:
 
     def start_cli(self):
         print("\n--- Client CLI ---")
-        print("Commands: 'connect', 'send <msg>', 'quit'")
+        print("Commands: 'connect', 'send <msg>', 'exit'")
 
         while True:
             try:
@@ -147,7 +140,7 @@ class Client:
                         self.send_message(cmd_parts[1])
                     else:
                         print("Usage: send <message>")
-                elif cmd == "quit":
+                elif cmd == "exit":
                     self.disconnect()
                     sys.exit(0)
                 else:
