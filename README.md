@@ -6,7 +6,9 @@
 
 ### Struktura repozytorium
 
-Kolejne zadania znajdują się w osobnych, odpowiednio nazwanych folderach. Każdy folder zawiera:
+Projekt znajduje się w folderze `project`. Plik `MANUAL.md` opisuje sposób jego uruchomienia.
+
+Kolejne zadania laboratoryjne znajdują się w osobnych, odpowiednio nazwanych folderach. Każdy folder zawiera:
 
 - Sprawozdanie w formacie PDF.
 
